@@ -1,0 +1,13 @@
+{
+  "name": "Turnos · Hematología",
+  "short_name": "Turnos",
+  "description": "Gestión de turnos del consultorio de hematología",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f8",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

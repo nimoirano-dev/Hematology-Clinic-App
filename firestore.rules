@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ¿El usuario está autenticado (personal del consultorio)?
+    function isStaff() {
+      return request.auth != null;
+    }
+
+    // Pacientes, turnos, lista de espera, config y staff:
+    // solo personal autenticado puede leer/escribir.
+    match /patients/{id}      { allow read, write: if isStaff(); }
+    match /appointments/{id}  { allow read, write: if isStaff(); }
+    match /waitlist/{id}      { allow read, write: if isStaff(); }
+    match /config/{id}        { allow read, write: if isStaff(); }
+    match /staff/{id}         { allow read, write: if isStaff(); }
+
+    // Solicitudes de turno (formulario público):
+    //  - CUALQUIERA puede CREAR una solicitud nueva (paciente sin login).
+    //  - Solo el personal puede leerlas, modificarlas o borrarlas.
+    match /requests/{id} {
+      allow create: if request.resource.data.estado == 'nuevo'
+                    && request.resource.data.nombre is string
+                    && request.resource.data.nombre.size() > 0
+                    && request.resource.data.telefono is string;
+      allow read, update, delete: if isStaff();
+    }
+  }
+}
