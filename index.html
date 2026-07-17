@@ -1196,6 +1196,10 @@ async function savePatient(id){
     notas: p_notas.value.trim(), updatedAt: serverTimestamp()
   };
   if(!data.nombre || !data.apellido){ toast('Nombre y apellido son obligatorios','err'); return; }
+  if(!id && data.dni){
+    const dup = state.patients.find(p=>p.dni && p.dni.trim()===data.dni);
+    if(dup){ toast(`Ya existe un paciente con ese DNI: ${dup.apellido}, ${dup.nombre}`,'err'); return; }
+  }
   try{
     if(id) await updateDoc(doc(db,'patients',id), data);
     else { data.createdAt=serverTimestamp(); await addDoc(collection(db,'patients'), data); }
@@ -1297,7 +1301,7 @@ function renderRequests(){
     <div class="avatar">${initials(r.nombre)}</div>
     <div class="li-main">
       <div class="li-name">${esc(r.nombre)}</div>
-      <div class="li-sub">${r.telefono?esc(r.telefono):'sin teléfono'}${r.obraSocial?' · '+esc(r.obraSocial):''}${r.motivo?' · '+esc(r.motivo):''}${r.preferencia?' · prefiere: '+esc(r.preferencia):''}</div>
+      <div class="li-sub">${r.dni?'DNI '+esc(r.dni)+' · ':''}${r.telefono?esc(r.telefono):'sin teléfono'}${r.obraSocial?' · '+esc(r.obraSocial):''}${r.motivo?' · '+esc(r.motivo):''}${r.preferencia?' · prefiere: '+esc(r.preferencia):''}</div>
     </div>
     <div class="li-acts">
       ${r.telefono?`<button class="btn btn-sm btn-wa" title="Escribirle por WhatsApp para coordinar" onclick="contactReq('${r.id}')">WhatsApp</button>`:''}
@@ -1317,10 +1321,25 @@ window.contactReq = id=>{
 window.acceptReq = async id=>{
   const r = state.requests.find(x=>x.id===id); if(!r) return;
   const parts = (r.nombre||'').trim().split(/\s+/);
-  // ¿ya existe un paciente con ese nombre? reutilizamos en vez de duplicar.
-  let ref = state.patients.find(p=>`${p.nombre} ${p.apellido}`.toLowerCase().trim()===(r.nombre||'').toLowerCase().trim());
+  // El DNI es la clave estable para reconocer pacientes recurrentes: si dos
+  // solicitudes traen el mismo DNI, son la misma persona aunque haya escrito
+  // el nombre distinto cada vez (con o sin segundo nombre, mayúsculas, etc.).
+  // Para solicitudes viejas sin DNI cargado, caemos al matching por nombre exacto.
+  let ref = r.dni ? state.patients.find(p=>p.dni && p.dni.trim()===r.dni.trim()) : null;
+  if(!ref && !r.dni){
+    ref = state.patients.find(p=>`${p.nombre} ${p.apellido}`.toLowerCase().trim()===(r.nombre||'').toLowerCase().trim());
+  }
   if(!ref){
-    ref = await addDoc(collection(db,'patients'), { nombre:parts.slice(0,-1).join(' ')||parts[0]||r.nombre, apellido:parts.length>1?parts.slice(-1)[0]:'', telefono:r.telefono||'', email:r.email||'', obraSocial:r.obraSocial||'', notas:r.motivo?('Motivo solicitud: '+r.motivo):'', createdAt:serverTimestamp() });
+    ref = await addDoc(collection(db,'patients'), { nombre:parts.slice(0,-1).join(' ')||parts[0]||r.nombre, apellido:parts.length>1?parts.slice(-1)[0]:'', dni:r.dni||'', telefono:r.telefono||'', email:r.email||'', obraSocial:r.obraSocial||'', notas:r.motivo?('Motivo solicitud: '+r.motivo):'', createdAt:serverTimestamp() });
+  } else {
+    // Paciente ya registrado: refrescamos los datos de contacto que haya vuelto a
+    // mandar (sin pisar con vacío lo que ya tenía cargado), sin tocar notas clínicas.
+    try{
+      await updateDoc(doc(db,'patients',ref.id), {
+        telefono: r.telefono||ref.telefono||'', email: r.email||ref.email||'', obraSocial: r.obraSocial||ref.obraSocial||'',
+        updatedAt: serverTimestamp()
+      });
+    }catch(_){ /* no bloquea el flujo de agendar si esto falla */ }
   }
   go('agenda');
   openApptModalFor(ref.id);
@@ -1465,6 +1484,8 @@ async function renderPublic(){
       <div class="notice" style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <div>Esto es un <b>pedido de turno</b>, no un turno confirmado. El consultorio se comunicará con usted por WhatsApp para acordar día y horario. <b>Por favor no concurra hasta recibir la confirmación.</b></div></div>
       <label class="lbl">Nombre y apellido *</label><input id="r_nombre">
+      <label class="lbl">DNI *</label><input id="r_dni" placeholder="12345678" inputmode="numeric">
+      <div class="small muted" style="margin-top:4px">Usamos su DNI para reconocerlo si ya solicitó un turno antes, y evitar cargar sus datos dos veces.</div>
       <label class="lbl">Teléfono (WhatsApp) *</label><input id="r_tel" placeholder="+54 9 11...">
       <label class="lbl">Email</label><input type="email" id="r_email">
       <label class="lbl">Obra social</label><input id="r_os">
@@ -1475,11 +1496,11 @@ async function renderPublic(){
     </div>
   </div>`;
   document.getElementById('r_btn').addEventListener('click', async ()=>{
-    const nombre=r_nombre.value.trim(), tel=r_tel.value.trim();
-    if(!nombre || !tel){ toast('Completá nombre y teléfono','err'); return; }
+    const nombre=r_nombre.value.trim(), dni=r_dni.value.trim(), tel=r_tel.value.trim();
+    if(!nombre || !dni || !tel){ toast('Completá nombre, DNI y teléfono','err'); return; }
     const btn=document.getElementById('r_btn'); btn.disabled=true; btn.textContent='Enviando…';
     try{
-      await addDoc(collection(db,'requests'), { nombre, telefono:tel, email:r_email.value.trim(), obraSocial:r_os.value.trim(), motivo:r_motivo.value.trim(), preferencia:r_pref.value.trim(), estado:'nuevo', createdAt:serverTimestamp() });
+      await addDoc(collection(db,'requests'), { nombre, dni, telefono:tel, email:r_email.value.trim(), obraSocial:r_os.value.trim(), motivo:r_motivo.value.trim(), preferencia:r_pref.value.trim(), estado:'nuevo', createdAt:serverTimestamp() });
       document.getElementById('pubForm').innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div class="big">¡Solicitud recibida!</div><div class="small">Su solicitud fue recibida. <b>Aún no tiene turno confirmado.</b> El consultorio se comunicará con usted por WhatsApp para acordar día y horario. Por favor no concurra hasta recibir esa confirmación. ¡Muchas gracias!</div></div>`;
     }catch(e){ toast('Error: '+e.code,'err'); btn.disabled=false; btn.textContent='Enviar solicitud'; }
   });
