@@ -7,13 +7,20 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Pacientes, turnos, lista de espera, config y staff:
+    // Pacientes, turnos, lista de espera y staff:
     // solo personal autenticado puede leer/escribir.
     match /patients/{id}      { allow read, write: if isStaff(); }
     match /appointments/{id}  { allow read, write: if isStaff(); }
     match /waitlist/{id}      { allow read, write: if isStaff(); }
-    match /config/{id}        { allow read, write: if isStaff(); }
     match /staff/{id}         { allow read, write: if isStaff(); }
+
+    // Config del consultorio (nombre, especialidad, profesional, dirección, teléfono):
+    // lectura pública para poder mostrar la marca en la home antes de loguearse;
+    // solo el personal puede modificarla.
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
 
     // Solicitudes de turno (formulario público):
     //  - CUALQUIERA puede CREAR una solicitud nueva (paciente sin login).

@@ -37,10 +37,37 @@
   --shadow-lg: 0 10px 30px rgba(16,33,51,0.12);
   --nav-w: 230px;
   --tab-h: 60px;
+  --font-base: 15px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10161c; --surface: #1a2129; --surface2: #212a33;
+    --border: #2c3742; --border-strong: #3a4753;
+    --text: #e6ebf0; --text-muted: #9aa7b3; --text-dim: #6b7885;
+    --primary: #14b8a6; --primary-dark: #0d9488; --primary-bg: #0f2e2a;
+    --accent: #60a5fa; --accent-bg: #16233d;
+    --ok: #4ade80; --ok-bg: #123420;
+    --warn: #fbbf24; --warn-bg: #3a2a0c;
+    --danger: #f87171; --danger-bg: #3a1414;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10161c; --surface: #1a2129; --surface2: #212a33;
+  --border: #2c3742; --border-strong: #3a4753;
+  --text: #e6ebf0; --text-muted: #9aa7b3; --text-dim: #6b7885;
+  --primary: #14b8a6; --primary-dark: #0d9488; --primary-bg: #0f2e2a;
+  --accent: #60a5fa; --accent-bg: #16233d;
+  --ok: #4ade80; --ok-bg: #123420;
+  --warn: #fbbf24; --warn-bg: #3a2a0c;
+  --danger: #f87171; --danger-bg: #3a1414;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: var(--font-base); line-height: 1.45; -webkit-font-smoothing: antialiased; transition: background 0.15s, color 0.15s; }
 a { color: var(--primary); }
 button { font-family: inherit; cursor: pointer; }
 
@@ -62,6 +89,11 @@ button { font-family: inherit; cursor: pointer; }
 .nav-btn.active { background: var(--primary-bg); color: var(--primary-dark); }
 .nav-btn .badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; }
 .nav-foot { padding: 12px; border-top: 1px solid var(--border); }
+.pref-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.pref-btn { flex: 1; padding: 7px 0; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; color: var(--text-muted); font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.pref-btn:hover { background: var(--surface2); color: var(--text); }
+.pref-btn svg { width: 15px; height: 15px; stroke-width: 2; }
+.pref-btn.active { background: var(--primary-bg); color: var(--primary-dark); border-color: var(--primary); }
 .nav-user { font-size: 0.75rem; color: var(--text-muted); padding: 4px 6px 10px; }
 .nav-user b { color: var(--text); display: block; font-size: 0.82rem; }
 .role-chip { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 5px; background: var(--accent-bg); color: var(--accent); margin-top: 4px; }
@@ -233,8 +265,16 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 #toast.ok { background: var(--ok); }
 #toast.err { background: var(--danger); }
 
-/* ---------- Login / loader ---------- */
+/* ---------- Login / loader / home ---------- */
 #gate { position: fixed; inset: 0; background: var(--bg); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.corner-btn { position: fixed; top: 16px; right: 16px; z-index: 501; background: var(--surface); box-shadow: var(--shadow); }
+.home-wrap { text-align: center; width: 100%; max-width: 460px; }
+.home-wrap .logo { width: 62px; height: 62px; border-radius: 16px; background: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.home-wrap .logo svg { width: 34px; height: 34px; stroke: #fff; }
+.home-wrap h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+.home-wrap p.sub { color: var(--text-muted); margin-top: 8px; font-size: 0.92rem; line-height: 1.5; }
+.home-cta { margin-top: 26px; }
+.home-cta .btn { font-size: 1rem; padding: 15px 26px; }
 .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 380px; padding: 30px 26px; }
 .login-logo { width: 54px; height: 54px; border-radius: 14px; background: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
 .login-logo svg { width: 30px; height: 30px; stroke: #fff; }
@@ -253,6 +293,27 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .pub-head .logo svg { width: 30px; height: 30px; stroke: #fff; }
 .pub-head h1 { font-size: 1.4rem; font-weight: 800; }
 .pub-head p { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+
+/* ---------- Stats ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.stat-card .n { font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+.stat-card .l { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.bar-row .lbl-b { width: 130px; flex-shrink: 0; font-size: 0.82rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--primary); border-radius: 6px; }
+.bar-n { width: 34px; flex-shrink: 0; text-align: right; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
+
+/* ---------- Print ---------- */
+#printArea { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea { display: block; position: absolute; top: 0; left: 0; width: 100%; padding: 10px; color: #000; }
+  .print-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .print-table th, .print-table td { border: 1px solid #999; padding: 6px 8px; font-size: 12px; text-align: left; }
+}
 
 /* ---------- Responsive ---------- */
 @media (max-width: 820px) {
@@ -281,15 +342,32 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 <!-- ============ GATE (login / loader) ============ -->
 <div id="gate">
+  <button class="btn btn-ghost btn-sm corner-btn" id="staffAccessBtn" style="display:none" onclick="showGate('login')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Acceso del personal
+  </button>
   <div class="center-load" id="gateLoad">
     <div class="spinner"></div>
     <div>Cargando…</div>
+  </div>
+  <div class="home-wrap" id="homeCard" style="display:none">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+    </div>
+    <h1 id="homeTitle">Turnos</h1>
+    <p class="sub" id="homeSub">Solicite su turno online y nos pondremos en contacto por WhatsApp para coordinar día y horario.</p>
+    <div class="home-cta">
+      <a href="?solicitar" class="btn btn-primary btn-block">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+        Solicitar un turno
+      </a>
+    </div>
   </div>
   <div class="login-card" id="loginCard" style="display:none">
     <div class="login-logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
     </div>
-    <h2>Turnos · Hematología</h2>
+    <h2 id="loginTitle">Turnos</h2>
     <div class="sub">Acceso del personal</div>
     <form id="loginForm">
       <label class="lbl">Email</label>
@@ -300,7 +378,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px" id="loginBtn">Ingresar</button>
     </form>
     <div style="text-align:center;margin-top:16px">
-      <a href="?solicitar" class="small">¿Sos paciente? Solicitá un turno →</a>
+      <a href="#" onclick="showGate('home');return false" class="small">← Volver al inicio</a>
     </div>
   </div>
 </div>
@@ -322,6 +400,13 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     </div>
     <div class="nav-items" id="navItems"></div>
     <div class="nav-foot">
+      <div class="pref-row">
+        <button class="pref-btn" id="fontDownBtn" title="Achicar texto" onclick="stepFontSize(-1)">A-</button>
+        <button class="pref-btn" id="fontUpBtn" title="Agrandar texto" onclick="stepFontSize(1)">A+</button>
+        <button class="pref-btn" id="themeBtn" title="Cambiar tema" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" id="themeIcon"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+      </div>
       <div class="nav-user" id="navUser"></div>
       <button class="btn btn-ghost btn-block btn-sm" id="logoutBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -336,15 +421,21 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <section class="section" id="s-agenda">
         <div class="page-head">
           <div><h1>Agenda</h1><div class="sub">Turnos del día</div></div>
-          <button class="btn btn-primary" onclick="openApptModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo turno
-          </button>
+          <div class="row">
+            <button class="btn" onclick="printAgenda()" title="Imprimir / exportar a PDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Imprimir
+            </button>
+            <button class="btn btn-primary" onclick="openApptModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo turno
+            </button>
+          </div>
         </div>
         <div class="agenda-bar">
           <div class="date-nav">
             <button onclick="shiftDay(-1)" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <span class="lbl-date" id="agendaDate"></span>
+            <span class="lbl-date" id="agendaDate" title="Atajos de teclado: ← → cambiar día · T hoy · N nuevo turno"></span>
             <button onclick="shiftDay(1)" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
           <button class="btn btn-sm" onclick="goToday()">Hoy</button>
@@ -398,6 +489,19 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
         <div class="card" id="waitList"></div>
       </section>
 
+      <!-- ===== Estadísticas ===== -->
+      <section class="section" id="s-stats">
+        <div class="page-head">
+          <div><h1>Estadísticas</h1><div class="sub">Datos agregados, sin información identificable de pacientes</div></div>
+          <select id="statsPeriod" style="width:auto" onchange="renderStats()">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+          </select>
+        </div>
+        <div id="statsContent"></div>
+      </section>
+
       <!-- ===== Config ===== -->
       <section class="section" id="s-config">
         <div class="page-head"><div><h1>Configuración</h1><div class="sub">Consultorio y personal</div></div></div>
@@ -406,6 +510,10 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
           <p class="small muted" style="margin-bottom:6px">Se usan en los mensajes de recordatorio.</p>
           <label class="lbl">Nombre del consultorio</label>
           <input type="text" id="cfgName" placeholder="Consultorio Dr. ...">
+          <label class="lbl">Especialidad</label>
+          <input type="text" id="cfgSpecialty" placeholder="Hematología, Cardiología, Dermatología…">
+          <label class="lbl">Profesional a cargo</label>
+          <input type="text" id="cfgDoctor" placeholder="Dra. Fulana de Tal">
           <label class="lbl">Dirección</label>
           <input type="text" id="cfgAddr" placeholder="Av. Siempreviva 742">
           <label class="lbl">Teléfono</label>
@@ -425,6 +533,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 <!-- Modals mount -->
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
+<div id="printArea"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -471,6 +580,55 @@ function fmtDateLong(s){ const d=parseYmd(s); const days=['Domingo','Lunes','Mar
 function todayYmd(){ return ymd(new Date()); }
 function onlyDigits(s){ return (s||'').replace(/\D/g,''); }
 function toast(msg, type=''){ const t=document.getElementById('toast'); t.textContent=msg; t.className=''; if(type)t.classList.add(type); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function userStamp(){ return state.user ? { uid: state.user.uid, email: state.user.email } : null; }
+
+// ---------- Preferencias: tema y tamaño de fuente ----------
+const FONT_STEPS = [13, 14, 15, 16, 17, 18];
+function applyTheme(theme){
+  if(theme) document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
+  const dark = theme==='dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const icon = document.getElementById('themeIcon');
+  if(icon) icon.innerHTML = dark
+    ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+}
+window.toggleTheme = ()=>{
+  const cur = document.documentElement.dataset.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const next = cur==='dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+};
+function applyFontSize(px){
+  document.documentElement.style.setProperty('--font-base', px+'px');
+}
+window.stepFontSize = delta=>{
+  let cur = Number(localStorage.getItem('fontSize')) || 15;
+  let idx = Math.max(0, FONT_STEPS.indexOf(cur));
+  idx = Math.min(FONT_STEPS.length-1, Math.max(0, idx+delta));
+  const px = FONT_STEPS[idx];
+  localStorage.setItem('fontSize', px);
+  applyFontSize(px);
+};
+(function initPrefs(){
+  const savedTheme = localStorage.getItem('theme');
+  applyTheme(savedTheme);
+  const savedFont = Number(localStorage.getItem('fontSize'));
+  if(savedFont) applyFontSize(savedFont);
+})();
+
+// ---------- Atajos de teclado (solo en Agenda, fuera de inputs/modal) ----------
+document.addEventListener('keydown', e=>{
+  if(state.publicMode) return;
+  if(document.getElementById('modalBg').classList.contains('open')) return;
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select') return;
+  if(activeSection!=='agenda') return;
+  if(e.key==='ArrowLeft') shiftDay(-1);
+  else if(e.key==='ArrowRight') shiftDay(1);
+  else if(e.key==='t'||e.key==='T') goToday();
+  else if(e.key==='n'||e.key==='N') openApptModal();
+});
 
 // ---------- Roles & nav ----------
 const NAV = [
@@ -478,6 +636,7 @@ const NAV = [
   { id:'solicitudes', label:'Solicitudes', roles:['admin'], icon:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' },
   { id:'pacientes', label:'Pacientes', roles:['admin','doctor'], icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
   { id:'espera', label:'Espera', roles:['admin'], icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
+  { id:'stats', label:'Estadísticas', roles:['admin'], icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
   { id:'config', label:'Config', roles:['admin'], icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' },
 ];
 let activeSection = 'agenda';
@@ -503,6 +662,7 @@ window.go = function(sec){
   if(sec==='espera') renderWait();
   if(sec==='solicitudes') renderRequests();
   if(sec==='config') renderConfig();
+  if(sec==='stats') renderStats();
 };
 
 // ---------- Auth ----------
@@ -522,7 +682,7 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>signOut(auth)
 onAuthStateChanged(auth, async user=>{
   if(state.publicMode) return; // en modo solicitud pública ignoramos el login del personal
   state.unsub.forEach(u=>u()); state.unsub=[];
-  if(!user){ showGate('login'); return; }
+  if(!user){ showGate('home'); return; }
   // resolver rol
   let role = 'admin';
   try{
@@ -538,11 +698,13 @@ onAuthStateChanged(auth, async user=>{
   subscribeAll();
 });
 
-function showGate(mode){
+window.showGate = function(mode){
   document.getElementById('app').style.display='none';
   document.getElementById('gate').style.display='flex';
   document.getElementById('gateLoad').style.display = mode==='loading'?'flex':'none';
+  document.getElementById('homeCard').style.display = mode==='home'?'block':'none';
   document.getElementById('loginCard').style.display = mode==='login'?'block':'none';
+  document.getElementById('staffAccessBtn').style.display = mode==='home'?'flex':'none';
 }
 
 // ---------- Firestore subscriptions ----------
@@ -555,6 +717,7 @@ function subscribeAll(){
   state.unsub.push(onSnapshot(query(collection(db,'appointments')), snap=>{
     state.appointments = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(activeSection==='agenda') renderAgenda();
+    if(activeSection==='stats') renderStats();
   }, errHandler));
   state.unsub.push(onSnapshot(query(collection(db,'waitlist'), orderBy('createdAt','desc')), snap=>{
     state.waitlist = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -659,14 +822,16 @@ function calendarHTML(days){
       const apellido=(a.patientName||'Paciente').split(',')[0].trim();
       return `<div class="cal-event estado-${a.estado||'pendiente'}${sinAv?' sinavisar':''}"
         style="top:${top}px;height:${height}px"
-        title="${esc(a.patientName||'')} · ${esc(a.hora)}${sinAv?' · ⚠ sin avisar':''}"
+        title="${esc(a.patientName||'')} · ${esc(a.hora)}${sinAv?' · ⚠ sin avisar':''} · arrastrá para reprogramar"
+        draggable="true"
+        ondragstart="calDragStart(event,'${a.id}')"
         onclick="event.stopPropagation();openApptModal('${a.id}')">
         <div class="cal-event-time">${esc(a.hora)}${sinAv?' ⚠':''}</div>
         ${!short?`<div class="cal-event-name">${esc(apellido)}</div>`:''}
         ${!short&&a.motivo?`<div class="cal-event-mot">${esc(a.motivo)}</div>`:''}
       </div>`;
     }).join('');
-    return `<div class="cal-day-col" style="height:${totalH}px" onclick="calNewAppt(event,'${date}')">${lines}${nowLine}${events}</div>`;
+    return `<div class="cal-day-col" style="height:${totalH}px" onclick="calNewAppt(event,'${date}')" ondragover="event.preventDefault()" ondrop="calDrop(event,'${date}')">${lines}${nowLine}${events}</div>`;
   }).join('');
   return `<div class="cal-outer"><div class="cal-head"><div class="cal-corner"></div><div class="cal-days-head">${headCols}</div></div><div class="cal-scroll"><div class="cal-inner"><div class="cal-times-col" style="height:${totalH}px">${timesHTML}</div><div class="cal-days-body">${dayCols}</div></div></div></div>`;
 }
@@ -682,6 +847,40 @@ window.calNewAppt=(e,date)=>{
   state.agendaDate=date; openApptModal();
   setTimeout(()=>{ const f=document.getElementById('m_fecha'); if(f) f.value=date; const h=document.getElementById('m_hora'); if(h) h.value=hora; },40);
 };
+// ---------- Drag & drop: reprogramar turno arrastrando el evento ----------
+let dragApptId = null;
+window.calDragStart = (e,id)=>{ dragApptId = id; e.dataTransfer.effectAllowed = 'move'; };
+window.calDrop = async (e,date)=>{
+  e.preventDefault();
+  if(!dragApptId) return;
+  const id = dragApptId; dragApptId = null;
+  const col = e.currentTarget, rect = col.getBoundingClientRect();
+  const scrollTop = col.closest('.cal-scroll')?.scrollTop || 0;
+  const y = e.clientY - rect.top + scrollTop;
+  const clampedMins = Math.max(0, Math.min(Math.round(y/15)*15, (CAL_END-CAL_START)*60-15));
+  const hh = CAL_START + Math.floor(clampedMins/60), mm = clampedMins%60;
+  const hora = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  try{
+    await updateDoc(doc(db,'appointments',id), { fecha: date, hora, updatedAt: serverTimestamp(), updatedBy: userStamp() });
+    toast(`Turno reprogramado a ${fmtDateLong(date)} ${hora}`, 'ok');
+  }catch(err){ toast('Error: '+err.code, 'err'); }
+};
+
+// ---------- Imprimir / exportar agenda ----------
+window.printAgenda = ()=>{
+  const days = getDays();
+  const appts = state.appointments.filter(a=>days.includes(a.fecha)&&a.estado!=='cancelado')
+    .sort((x,y)=>(x.fecha+x.hora).localeCompare(y.fecha+y.hora));
+  const rows = appts.map(a=>`<tr><td>${esc(fmtDateLong(a.fecha))}</td><td>${esc(a.hora||'')}</td><td>${esc(a.patientName||'')}</td><td>${esc(a.motivo||'')}</td><td>${esc(a.estado||'pendiente')}</td><td>${esc(a.telefono||'')}</td></tr>`).join('');
+  document.getElementById('printArea').innerHTML = `
+    <h2>Agenda · ${esc(agendaRangeLabel())}</h2>
+    <table class="print-table">
+      <thead><tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Motivo</th><th>Estado</th><th>Teléfono</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6">Sin turnos en este rango.</td></tr>'}</tbody>
+    </table>`;
+  window.print();
+};
+
 // ¿el turno todavía "necesita" comunicación? (no cancelado/atendido/ausente)
 function apptVivo(a){ return !['cancelado','atendido','ausente'].includes(a.estado); }
 function apptCard(a){
@@ -777,6 +976,7 @@ window.openApptModal = (id=null)=>{
     <input type="text" id="m_motivo" value="${a?esc(a.motivo):''}" placeholder="Control, hemograma, primera consulta…">
     <label class="lbl">Notas</label>
     <textarea id="m_notas" placeholder="Observaciones internas…">${a?esc(a.notas):''}</textarea>
+    ${a&&(a.createdBy?.email||a.updatedBy?.email)?`<div class="small muted" style="margin-top:12px">${a.createdBy?.email?`Creado por ${esc(a.createdBy.email)}`:''}${a.updatedBy?.email&&a.updatedBy.email!==a.createdBy?.email?`${a.createdBy?.email?' · ':''}Última edición: ${esc(a.updatedBy.email)}`:''}</div>`:''}
     ${a&&a.telefono?`<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
       <button class="btn btn-wa btn-sm" onclick="notifyAppt('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> ${a.avisoEnviado?'Recordatorio':'Avisar'} por WhatsApp</button>
       <button class="btn btn-ghost btn-sm" onclick="sendRcta('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Enviar formulario RCTA</button>
@@ -798,7 +998,7 @@ async function saveAppt(id){
     fecha: m_fecha.value, hora: m_hora.value,
     duracion: Number(m_dur.value)||30,
     estado: m_estado.value, motivo: m_motivo.value.trim(), notas: m_notas.value.trim(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(), updatedBy: userStamp()
   };
   const reqId = state.pendingReqId; // solicitud que estamos agendando (si aplica)
   try{
@@ -806,7 +1006,7 @@ async function saveAppt(id){
       await updateDoc(doc(db,'appointments',id), data); toast('Turno actualizado','ok');
       closeModal();
     } else {
-      data.createdAt=serverTimestamp();
+      data.createdAt=serverTimestamp(); data.createdBy=userStamp();
       if(reqId) data.requestId = reqId;
       const ref = await addDoc(collection(db,'appointments'), data);
       // Recién ahora que el turno EXISTE marcamos la solicitud como agendada.
@@ -1024,12 +1224,53 @@ window.acceptReq = async id=>{
 };
 window.rejectReq = id=>{ confirmDialog('¿Descartar esta solicitud? (no se crea ningún turno)', async ()=>{ try{ await updateDoc(doc(db,'requests',id),{estado:'descartado'}); toast('Solicitud descartada','ok'); }catch(e){ toast('Error: '+e.code,'err'); } }); };
 
+// ---------- Estadísticas (datos agregados, sin nombres de pacientes) ----------
+function renderStats(){
+  const el = document.getElementById('statsContent');
+  const days = Number(document.getElementById('statsPeriod')?.value || 30);
+  const since = new Date(); since.setDate(since.getDate()-days);
+  const sinceYmd = ymd(since), todayStr = todayYmd();
+  const inRange = state.appointments.filter(a=>a.fecha>=sinceYmd && a.fecha<=todayStr);
+  const total = inRange.length;
+  const byEstado = {};
+  inRange.forEach(a=>{ const e=a.estado||'pendiente'; byEstado[e]=(byEstado[e]||0)+1; });
+  const ausentes = byEstado.ausente||0;
+  const atendidos = byEstado.atendido||0;
+  const cancelados = byEstado.cancelado||0;
+  const tasaAusencia = total ? Math.round(ausentes/total*100) : 0;
+  const osCounts = {};
+  inRange.forEach(a=>{ const os=(a.obraSocial||'').trim()||'Sin especificar'; osCounts[os]=(osCounts[os]||0)+1; });
+  const osSorted = Object.entries(osCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxOs = osSorted[0]?.[1] || 1;
+  el.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="n">${total}</div><div class="l">Turnos en el período</div></div>
+      <div class="stat-card"><div class="n">${atendidos}</div><div class="l">Atendidos</div></div>
+      <div class="stat-card"><div class="n" style="color:var(--danger)">${tasaAusencia}%</div><div class="l">Tasa de ausencias (${ausentes} de ${total})</div></div>
+      <div class="stat-card"><div class="n">${cancelados}</div><div class="l">Cancelados</div></div>
+    </div>
+    <div class="card pad">
+      <h3 style="font-size:1rem;margin-bottom:12px">Obra social más frecuente</h3>
+      ${osSorted.length ? osSorted.map(([name,n])=>`
+        <div class="bar-row">
+          <div class="lbl-b" title="${esc(name)}">${esc(name)}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxOs*100)}%"></div></div>
+          <div class="bar-n">${n}</div>
+        </div>`).join('') : '<div class="small muted">Sin turnos en este período.</div>'}
+    </div>`;
+}
+
 // ---------- Config ----------
 function renderConfig(){ fillConfig(); renderStaff(); }
-function fillConfig(){ cfgName.value=state.config.name||''; cfgAddr.value=state.config.address||''; cfgPhone.value=state.config.phone||''; }
+function fillConfig(){ cfgName.value=state.config.name||''; cfgSpecialty.value=state.config.specialty||''; cfgDoctor.value=state.config.doctorName||''; cfgAddr.value=state.config.address||''; cfgPhone.value=state.config.phone||''; }
 window.saveConfig = async ()=>{
-  try{ await setDoc(doc(db,'config','consultorio'), { name:cfgName.value.trim(), address:cfgAddr.value.trim(), phone:cfgPhone.value.trim() }, {merge:true}); toast('Configuración guardada','ok'); }
-  catch(e){ toast('Error: '+e.code,'err'); }
+  try{
+    await setDoc(doc(db,'config','consultorio'), {
+      name:cfgName.value.trim(), specialty:cfgSpecialty.value.trim(), doctorName:cfgDoctor.value.trim(),
+      address:cfgAddr.value.trim(), phone:cfgPhone.value.trim()
+    }, {merge:true});
+    toast('Configuración guardada','ok');
+  }catch(e){ toast('Error: '+e.code,'err'); }
 };
 function renderStaff(){
   const el = document.getElementById('staffList');
@@ -1075,7 +1316,7 @@ async function renderPublic(){
     <div class="pub-head">
       <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
       <h1>Solicitud de turno</h1>
-      <p>Consultorio de Hematología</p>
+      <p>${esc(state.config.name || 'Consultorio')}${state.config.specialty ? ' de '+esc(state.config.specialty) : ''}</p>
     </div>
     <div class="card pad" id="pubForm">
       <div class="notice" style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -1087,7 +1328,7 @@ async function renderPublic(){
       <label class="lbl">Motivo de la consulta</label><textarea id="r_motivo" placeholder="Indique brevemente el motivo de la consulta…"></textarea>
       <label class="lbl">Preferencia de día/horario</label><input id="r_pref" placeholder="Ej: martes a la mañana">
       <button class="btn btn-primary btn-block" style="margin-top:18px" id="r_btn">Enviar solicitud</button>
-      <div style="text-align:center;margin-top:14px"><a href="?" class="small">← Volver al acceso del personal</a></div>
+      <div style="text-align:center;margin-top:14px"><a href="?" class="small">← Volver al inicio</a></div>
     </div>
   </div>`;
   document.getElementById('r_btn').addEventListener('click', async ()=>{
@@ -1102,11 +1343,30 @@ async function renderPublic(){
 }
 
 // ---------- Boot ----------
+// Marca del consultorio (nombre/especialidad/profesional): lectura pública,
+// para poder mostrarla en la home y el formulario antes de loguearse.
+function applyBranding(){
+  const c = state.config || {};
+  const brand = 'Turnos' + (c.specialty ? ' · '+c.specialty : '');
+  document.title = brand;
+  const t = document.getElementById('homeTitle'); if(t) t.textContent = brand;
+  const lt = document.getElementById('loginTitle'); if(lt) lt.textContent = brand;
+  const s = document.getElementById('homeSub');
+  if(s) s.textContent = `${c.name || 'Consultorio'}${c.specialty?' de '+c.specialty:''}${c.doctorName?' — '+c.doctorName:''}. Solicite su turno online y nos pondremos en contacto por WhatsApp para coordinar día y horario.`;
+}
+async function loadPublicConfig(){
+  try{
+    const snap = await getDoc(doc(db,'config','consultorio'));
+    if(snap.exists()) state.config = snap.data();
+  }catch(_){ /* sin permisos o sin conexión: se muestran los valores por defecto */ }
+  applyBranding();
+}
 if(new URLSearchParams(location.search).has('solicitar')){
   state.publicMode = true;
-  renderPublic();
+  loadPublicConfig().then(renderPublic);
 } else {
   showGate('loading');
+  loadPublicConfig();
 }
 
 // Service worker
