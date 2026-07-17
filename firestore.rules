@@ -2,13 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ¿El usuario está autenticado (personal del consultorio)?
+    // ¿El usuario está autenticado Y tiene un documento en staff/{uid}?
+    // (antes solo chequeaba request.auth != null, lo que le daba acceso
+    // total a CUALQUIER usuario autenticado, tuviera o no un rol asignado)
     function isStaff() {
-      return request.auth != null;
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid));
     }
 
     // Pacientes, turnos, lista de espera y staff:
-    // solo personal autenticado puede leer/escribir.
+    // solo personal con documento en staff/{uid} puede leer/escribir.
     match /patients/{id}      { allow read, write: if isStaff(); }
     match /appointments/{id}  { allow read, write: if isStaff(); }
     match /waitlist/{id}      { allow read, write: if isStaff(); }
@@ -31,6 +34,21 @@ service cloud.firestore {
                     && request.resource.data.nombre.size() > 0
                     && request.resource.data.telefono is string;
       allow read, update, delete: if isStaff();
+    }
+
+    // Solicitudes de acceso al personal (auto-registro sin intervención manual):
+    //  - un usuario recién autenticado puede crear ÚNICAMENTE su propia solicitud
+    //    (el ID del documento debe ser su propio UID), en estado 'pendiente'.
+    //  - puede leer el estado de SU PROPIA solicitud (para saber si fue aprobada/rechazada).
+    //  - solo el personal ya existente puede leer todas, aprobarlas o rechazarlas.
+    match /accessRequests/{uid} {
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.estado == 'pendiente'
+                    && request.resource.data.email is string
+                    && request.resource.data.nombre is string;
+      allow read: if isStaff() || (request.auth != null && request.auth.uid == uid);
+      allow update, delete: if isStaff();
     }
   }
 }

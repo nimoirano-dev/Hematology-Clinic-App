@@ -250,7 +250,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .search-box input { padding-left: 36px; }
 
 /* ---------- Modal ---------- */
-.modal-bg { position: fixed; inset: 0; background: rgba(16,33,51,0.45); backdrop-filter: blur(2px); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow-y: auto; }
+.modal-bg { position: fixed; inset: 0; background: rgba(16,33,51,0.45); backdrop-filter: blur(2px); z-index: 600; display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow-y: auto; }
 .modal-bg.open { display: flex; }
 .modal { background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 540px; box-shadow: var(--shadow-lg); animation: pop 0.18s ease; margin: auto; }
 @keyframes pop { from { opacity: 0; transform: scale(0.97) translateY(6px); } to { opacity: 1; transform: none; } }
@@ -377,8 +377,24 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <div class="login-err" id="loginErr"></div>
       <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px" id="loginBtn">Ingresar</button>
     </form>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" onclick="openForgotPassword();return false" class="small">¿Olvidaste tu contraseña?</a>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <a href="#" onclick="openAccessRequest();return false" class="small">¿Sos parte del personal y no tenés cuenta? Solicitar acceso →</a>
+    </div>
     <div style="text-align:center;margin-top:16px">
       <a href="#" onclick="showGate('home');return false" class="small">← Volver al inicio</a>
+    </div>
+  </div>
+  <div class="home-wrap" id="pendingCard" style="display:none">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h1 id="pendingTitle">Solicitud pendiente</h1>
+    <p class="sub" id="pendingSub">Tu solicitud de acceso está pendiente de aprobación por el personal administrador.</p>
+    <div class="home-cta">
+      <button class="btn btn-ghost btn-block" onclick="doSignOut()">Cerrar sesión</button>
     </div>
   </div>
 </div>
@@ -522,8 +538,13 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
         </div>
         <div class="card pad">
           <h3 style="font-size:1rem;margin-bottom:4px">Personal con acceso</h3>
-          <p class="small muted">Para dar acceso, creá el usuario en Firebase Authentication y agregalo en la colección <code>staff</code> con su rol. Ver <b>SETUP.md</b>.</p>
+          <p class="small muted">Se da de alta automáticamente al aprobar una solicitud de acceso. También podés crear el usuario a mano en Firebase Authentication y agregarlo en la colección <code>staff</code> con su rol (ver <b>SETUP.md</b>).</p>
           <div id="staffList" style="margin-top:12px"></div>
+        </div>
+        <div class="card pad">
+          <h3 style="font-size:1rem;margin-bottom:4px">Solicitudes de acceso</h3>
+          <p class="small muted">Personas que pidieron acceso desde la pantalla de login y todavía no fueron aprobadas ni rechazadas.</p>
+          <div id="accessReqList" style="margin-top:12px"></div>
         </div>
       </section>
     </div>
@@ -537,7 +558,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, sendPasswordResetEmail }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp, getDocs }
@@ -563,7 +585,7 @@ const db = getFirestore(fb);
 // ---------- State ----------
 const state = {
   user: null, role: null,
-  patients: [], appointments: [], waitlist: [], requests: [], staff: [],
+  patients: [], appointments: [], waitlist: [], requests: [], staff: [], accessRequests: [],
   config: {},
   agendaDate: ymd(new Date()),
   agendaView: 'day',
@@ -648,6 +670,7 @@ function buildNav(){
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
       <span class="lbl-t">${n.label}</span>
       ${n.id==='solicitudes'?'<span class="badge" id="reqBadge" style="display:none">0</span>':''}
+      ${n.id==='config'?'<span class="badge" id="accessBadge" style="display:none">0</span>':''}
     </button>`).join('');
   if(!items.find(n=>n.id===activeSection)) activeSection = items[0]?.id || 'agenda';
   go(activeSection);
@@ -677,18 +700,26 @@ document.getElementById('loginForm').addEventListener('submit', async e=>{
     err.classList.add('show'); btn.disabled=false; btn.textContent='Ingresar';
   }
 });
-document.getElementById('logoutBtn').addEventListener('click', ()=>signOut(auth));
+window.doSignOut = ()=>signOut(auth);
+document.getElementById('logoutBtn').addEventListener('click', doSignOut);
 
 onAuthStateChanged(auth, async user=>{
   if(state.publicMode) return; // en modo solicitud pública ignoramos el login del personal
   state.unsub.forEach(u=>u()); state.unsub=[];
   if(!user){ showGate('home'); return; }
-  // resolver rol
-  let role = 'admin';
+  // resolver rol: solo cuenta si existe un documento en staff/{uid}
+  let role = null;
   try{
     const sd = await getDoc(doc(db,'staff',user.uid));
     if(sd.exists()) role = sd.data().role || 'admin';
-  }catch(_){}
+  }catch(_){ /* sin doc en staff todavía: las reglas rechazan la lectura */ }
+  if(!role){
+    // no es (todavía) personal: mostrar el estado de su solicitud de acceso, si tiene una
+    let reqData = null;
+    try{ const rq = await getDoc(doc(db,'accessRequests',user.uid)); if(rq.exists()) reqData = rq.data(); }catch(_){}
+    showPendingAccess(reqData);
+    return;
+  }
   state.user = user; state.role = role;
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='flex';
@@ -704,7 +735,73 @@ window.showGate = function(mode){
   document.getElementById('gateLoad').style.display = mode==='loading'?'flex':'none';
   document.getElementById('homeCard').style.display = mode==='home'?'block':'none';
   document.getElementById('loginCard').style.display = mode==='login'?'block':'none';
+  document.getElementById('pendingCard').style.display = mode==='pending'?'block':'none';
   document.getElementById('staffAccessBtn').style.display = mode==='home'?'flex':'none';
+}
+
+function showPendingAccess(reqData){
+  const t = document.getElementById('pendingTitle'), s = document.getElementById('pendingSub');
+  if(reqData?.estado==='rechazado'){
+    t.textContent = 'Solicitud rechazada';
+    s.textContent = 'Tu solicitud de acceso fue rechazada. Si creés que es un error, contactá al personal administrador.';
+  } else if(reqData?.estado==='pendiente'){
+    t.textContent = 'Solicitud pendiente';
+    s.textContent = 'Tu solicitud de acceso está pendiente de aprobación. Te van a habilitar el acceso una vez que el personal administrador la revise.';
+  } else {
+    t.textContent = 'Sin acceso';
+    s.textContent = 'Tu cuenta no tiene acceso al sistema. Contactá al personal administrador para que te dé de alta.';
+  }
+  showGate('pending');
+}
+
+// ---------- Recuperar contraseña ----------
+window.openForgotPassword = ()=>{
+  const prefill = document.getElementById('loginEmail')?.value.trim() || '';
+  modal('Recuperar contraseña', `
+    <p class="small muted" style="margin-bottom:10px">Ingresá tu email y te enviamos un enlace para restablecer tu contraseña.</p>
+    <label class="lbl">Email</label>
+    <input type="email" id="fp_email" value="${esc(prefill)}" placeholder="secretaria@consultorio.com">
+  `, [
+    {label:'Cancelar', class:'btn-ghost', fn:closeModal},
+    {label:'Enviar', class:'btn-primary', fn:async ()=>{
+      const email = document.getElementById('fp_email').value.trim();
+      if(!email){ toast('Ingresá tu email','err'); return; }
+      try{ await sendPasswordResetEmail(auth, email); toast('Te enviamos un email para restablecer la contraseña','ok'); closeModal(); }
+      catch(e){ toast('Error: '+e.code,'err'); }
+    }}
+  ]);
+};
+
+// ---------- Solicitar acceso (auto-registro de personal, pendiente de aprobación) ----------
+window.openAccessRequest = ()=>{
+  modal('Solicitar acceso', `
+    <div class="notice info" style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <div>Se crea tu cuenta, pero <b>no vas a poder ingresar hasta que el personal administrador apruebe tu solicitud</b>.</div></div>
+    <label class="lbl">Nombre y apellido</label><input id="ar_nombre">
+    <label class="lbl">Email</label><input type="email" id="ar_email" placeholder="tu@email.com">
+    <label class="lbl">Contraseña</label><input type="password" id="ar_pass" placeholder="Mínimo 6 caracteres">
+    <label class="lbl">Motivo / rol solicitado</label><textarea id="ar_motivo" placeholder="Ej: soy la nueva secretaria del consultorio…"></textarea>
+  `, [
+    {label:'Cancelar', class:'btn-ghost', fn:closeModal},
+    {label:'Enviar solicitud', class:'btn-primary', fn:submitAccessRequest}
+  ]);
+};
+async function submitAccessRequest(){
+  const nombre = document.getElementById('ar_nombre').value.trim();
+  const email = document.getElementById('ar_email').value.trim();
+  const pass = document.getElementById('ar_pass').value;
+  const motivo = document.getElementById('ar_motivo').value.trim();
+  if(!nombre || !email || !pass){ toast('Completá nombre, email y contraseña','err'); return; }
+  if(pass.length<6){ toast('La contraseña debe tener al menos 6 caracteres','err'); return; }
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db,'accessRequests',cred.user.uid), { nombre, email, motivo, estado:'pendiente', createdAt: serverTimestamp() });
+    closeModal();
+    toast('Solicitud enviada · pendiente de aprobación','ok');
+  }catch(e){
+    const msg = e.code==='auth/email-already-in-use' ? 'Ese email ya tiene una cuenta. Probá recuperar la contraseña.' : 'Error: '+e.code;
+    toast(msg,'err');
+  }
 }
 
 // ---------- Firestore subscriptions ----------
@@ -731,6 +828,11 @@ function subscribeAll(){
     }, errHandler));
     state.unsub.push(onSnapshot(collection(db,'staff'), snap=>{
       state.staff = snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(activeSection==='config') renderConfig();
+    }, errHandler));
+    state.unsub.push(onSnapshot(query(collection(db,'accessRequests'), where('estado','==','pendiente')), snap=>{
+      state.accessRequests = snap.docs.map(d=>({id:d.id,...d.data()}));
+      updateAccessBadge();
       if(activeSection==='config') renderConfig();
     }, errHandler));
     state.unsub.push(onSnapshot(doc(db,'config','consultorio'), snap=>{
@@ -1180,6 +1282,11 @@ function updateReqBadge(){
   if(state.requests.length){ b.style.display='inline-flex'; b.textContent=state.requests.length; }
   else b.style.display='none';
 }
+function updateAccessBadge(){
+  const b = document.getElementById('accessBadge'); if(!b) return;
+  if(state.accessRequests.length){ b.style.display='inline-flex'; b.textContent=state.accessRequests.length; }
+  else b.style.display='none';
+}
 function renderRequests(){
   const el = document.getElementById('reqList');
   if(!state.requests.length){ el.innerHTML = emptyState('inbox','Sin solicitudes pendientes','Los pedidos de turno de pacientes aparecen acá.'); return; }
@@ -1261,7 +1368,7 @@ function renderStats(){
 }
 
 // ---------- Config ----------
-function renderConfig(){ fillConfig(); renderStaff(); }
+function renderConfig(){ fillConfig(); renderStaff(); renderAccessRequests(); }
 function fillConfig(){ cfgName.value=state.config.name||''; cfgSpecialty.value=state.config.specialty||''; cfgDoctor.value=state.config.doctorName||''; cfgAddr.value=state.config.address||''; cfgPhone.value=state.config.phone||''; }
 window.saveConfig = async ()=>{
   try{
@@ -1274,9 +1381,45 @@ window.saveConfig = async ()=>{
 };
 function renderStaff(){
   const el = document.getElementById('staffList');
-  if(!state.staff.length){ el.innerHTML='<div class="small muted">Sin registros en <code>staff</code>. Por defecto, cualquier usuario autenticado entra como admin.</div>'; return; }
+  if(!state.staff.length){ el.innerHTML='<div class="small muted">Sin registros en <code>staff</code> todavía.</div>'; return; }
   el.innerHTML = state.staff.map(s=>`<div class="list-item" style="padding:10px 0"><div class="li-main"><div class="li-name small">${esc(s.email||s.id)}</div><div class="li-sub">uid: ${esc(s.id)}</div></div><span class="role-chip">${esc(s.role||'admin')}</span></div>`).join('');
 }
+
+// ---------- Solicitudes de acceso al personal ----------
+function renderAccessRequests(){
+  const el = document.getElementById('accessReqList'); if(!el) return;
+  if(!state.accessRequests.length){ el.innerHTML = '<div class="small muted">Sin solicitudes de acceso pendientes.</div>'; return; }
+  el.innerHTML = state.accessRequests.map(r=>`<div class="list-item" style="flex-wrap:wrap">
+    <div class="avatar">${initials(r.nombre)}</div>
+    <div class="li-main">
+      <div class="li-name">${esc(r.nombre)}</div>
+      <div class="li-sub">${esc(r.email)}${r.motivo?' · '+esc(r.motivo):''}</div>
+    </div>
+    <div class="li-acts">
+      <select id="arole_${r.id}" style="width:auto">
+        <option value="admin">admin</option>
+        <option value="doctor">doctor</option>
+      </select>
+      <button class="btn btn-sm btn-primary" onclick="approveAccessRequest('${r.id}')">Aprobar</button>
+      <button class="btn btn-sm btn-ghost" onclick="rejectAccessRequest('${r.id}')">Rechazar</button>
+    </div>
+  </div>`).join('');
+}
+window.approveAccessRequest = async id=>{
+  const r = state.accessRequests.find(x=>x.id===id); if(!r) return;
+  const role = document.getElementById('arole_'+id)?.value || 'admin';
+  try{
+    await setDoc(doc(db,'staff',id), { email:r.email, role }, {merge:true});
+    await updateDoc(doc(db,'accessRequests',id), { estado:'aprobado' });
+    toast('Acceso aprobado','ok');
+  }catch(e){ toast('Error: '+e.code,'err'); }
+};
+window.rejectAccessRequest = id=>{
+  confirmDialog('¿Rechazar esta solicitud de acceso?', async ()=>{
+    try{ await updateDoc(doc(db,'accessRequests',id), { estado:'rechazado' }); toast('Solicitud rechazada','ok'); }
+    catch(e){ toast('Error: '+e.code,'err'); }
+  });
+};
 
 // ---------- Modal helpers ----------
 function modal(title, body, actions){
