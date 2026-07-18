@@ -1,7 +1,11 @@
 // Service worker mínimo: cachea el shell para que la PWA abra offline.
 // Las credenciales/datos siempre vienen de Firebase (red), así que NO cacheamos esas requests.
-const CACHE = 'turnos-v1';
-const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
+const CACHE = 'turnos-v2';
+const SHELL = ['./', './index.html', './manifest.json', './icon.svg',
+  './js/main.js', './js/firebase.js', './js/state.js', './js/utils.js', './js/prefs.js',
+  './js/modal.js', './js/nav.js', './js/auth.js', './js/data.js', './js/agenda.js',
+  './js/patients.js', './js/waitlist.js', './js/requests.js', './js/stats.js',
+  './js/config.js', './js/public.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
